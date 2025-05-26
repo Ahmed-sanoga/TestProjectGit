@@ -28,7 +28,7 @@
 
             public string? NationalNumber { get; set; }
 
-            public string? CurrentThirdPartyStatus { get; set; }
+            
         }
     
 }
