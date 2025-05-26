@@ -9,6 +9,7 @@
         public string LastName { get; set; } = string.Empty;
 
         public string Place { get; set; } = string.Empty;
+        public string Work {  get; set; } = string.Empty;
     }
 }
 
