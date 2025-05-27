@@ -61,6 +61,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 // Repositories & AutoMapper
 builder.Services.AddScoped<ISuperheroRepository, SuperheroRepository>();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<ICardsRepositories, CardsRepsitories>();
 
 var app = builder.Build();
 

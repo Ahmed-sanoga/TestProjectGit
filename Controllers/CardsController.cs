@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SuperheroAPI.Data;  
-using SuperheroAPI.Entites; 
+using SuperheroAPI.Entites;
+using SuperheroAPI.Repositories;
+using SuperheroAPI.DOTs;
+
 
 namespace SuperheroAPI.Controllers
 {
@@ -10,50 +14,56 @@ namespace SuperheroAPI.Controllers
     public class CardsController : ControllerBase
     {
         private readonly CardsDbContext _context;
+        private readonly ICardsRepositories _repository;
+        private readonly IMapper _mapper;
 
-        public CardsController(CardsDbContext context)
+        public CardsController( ICardsRepositories repository ,IMapper mapper)
         {
-            _context = context;
+           
+            _repository = repository;
+            _mapper = mapper;
         }
 
         // GET: api/cards
         [HttpGet]
-        public async Task<ActionResult<List<Card>>> GetAllCards()
+        public async Task<ActionResult<List<CardDto>>> GetAllCards()
         {
-            var cards = await _context.Cards.ToListAsync();
-            return Ok(cards);
+            var cards = await _repository.GetCardsAsync();
+            var cardDtos = _mapper.Map<List<CardDto>>(cards);
+            return Ok(cardDtos);
         }
 
         // GET: api/cards/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Card>> GetCard(long id)
+        public async Task<ActionResult<Card>> GetCard(int id)
         {
-            var card = await _context.Cards.FindAsync(id);
+            var card = await _repository.GetByIdAsync(id); 
+            var carddto = _mapper.Map<CardDto>(card);
             if (card == null)
                 return NotFound("Card not found");
 
-            return Ok(card);
+            return Ok(carddto);
         }
 
         // POST: api/cards
         [HttpPost]
         public async Task<ActionResult<List<Card>>> AddCard(Card card)
         {
-            _context.Cards.Add(card);
-            await _context.SaveChangesAsync();
+            await _repository.AddAsync(card);
+      
 
-            return Ok(await _context.Cards.ToListAsync());
+            return Ok(await _repository.GetCardsAsync());
         }
 
         // PUT: api/cards
         [HttpPut]
         public async Task<ActionResult<List<Card>>> UpdateCard(Card updatedCard)
         {
-            var dbCard = await _context.Cards.FindAsync(updatedCard.Id);
+            var dbCard = await _repository.GetByIdAsync(updatedCard.Id);
             if (dbCard == null)
                 return NotFound("Card not found");
 
-            // قم بتحديث الخصائص
+            // تحديث الخصائص
             dbCard.CardNumber = updatedCard.CardNumber;
             dbCard.MaskCardNumber = updatedCard.MaskCardNumber;
             dbCard.AccountNumber = updatedCard.AccountNumber;
@@ -67,9 +77,9 @@ namespace SuperheroAPI.Controllers
             dbCard.NationalNumber = updatedCard.NationalNumber;
             dbCard.CurrentThirdPartyStatus = updatedCard.CurrentThirdPartyStatus;
 
-            await _context.SaveChangesAsync();
+            await _repository.UpdateAsync(dbCard); // مهم جدًا
 
-            return Ok(await _context.Cards.ToListAsync());
+            return Ok(await _repository.GetCardsAsync());
         }
 
         // DELETE: api/cards/5
@@ -81,7 +91,7 @@ namespace SuperheroAPI.Controllers
                 return NotFound("Card not found");
 
             _context.Cards.Remove(dbCard);
-            await _context.SaveChangesAsync();
+        
 
             return Ok(await _context.Cards.ToListAsync());
         }
@@ -89,22 +99,11 @@ namespace SuperheroAPI.Controllers
         // GET: api/cards/search?cardNumber=123456&accountNumber=abc123&nationalNumber=987654
         [HttpGet("search")]
         public async Task<ActionResult<List<Card>>> SearchCards(
-            [FromQuery] string? cardNumber,
-            [FromQuery] string? accountNumber,
-            [FromQuery] string? nationalNumber)
+    [FromQuery] string? cardNumber,
+    [FromQuery] string? accountNumber,
+    [FromQuery] string? nationalNumber)
         {
-            var query = _context.Cards.AsQueryable();
-
-            if (!string.IsNullOrEmpty(cardNumber))
-                query = query.Where(c => c.CardNumber == cardNumber);
-
-            if (!string.IsNullOrEmpty(accountNumber))
-                query = query.Where(c => c.AccountNumber == accountNumber);
-
-            if (!string.IsNullOrEmpty(nationalNumber))
-                query = query.Where(c => c.NationalNumber == nationalNumber);
-
-            var results = await query.ToListAsync();
+            var results = await _repository.SearchAsync(cardNumber, accountNumber, nationalNumber);
 
             if (results.Count == 0)
                 return NotFound("No matching cards found.");

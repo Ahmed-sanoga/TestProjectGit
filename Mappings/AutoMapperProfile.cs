@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using SuperheroAPI.DOTs;
 using SuperheroAPI.DTOs;
 using SuperheroAPI.Entites;
 
@@ -13,6 +14,9 @@ namespace SuperheroAPI.Mappings
 
             // DTO ➜ Entity
             CreateMap<CreateSuperheroDto, Superhero>();
+
+            CreateMap<Card, CardDto>();
+            CreateMap<CardDto, Card>();
         }
     }
 }

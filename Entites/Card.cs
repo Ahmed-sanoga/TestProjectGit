@@ -29,7 +29,7 @@
             public string? NationalNumber { get; set; }
 
             public string? CurrentThirdPartyStatus { get; set; }
-        public string? work {  get; set; }
+        
     }
     
 }
