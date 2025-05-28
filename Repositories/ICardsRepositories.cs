@@ -1,4 +1,5 @@
-﻿using SuperheroAPI.Entites;
+﻿using SuperheroAPI.DOTs;
+using SuperheroAPI.Entites;
 
 namespace SuperheroAPI.Repositories
 {

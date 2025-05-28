@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SuperheroAPI.Data;
 using SuperheroAPI.Entites;
+using SuperheroAPI.DOTs;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SuperheroAPI.Repositories
@@ -15,16 +16,28 @@ namespace SuperheroAPI.Repositories
         }
         public async Task<List<Card>> GetCardsAsync()
         {
-            return await _context.Cards.ToListAsync();
+            return await _context.Cards.Include(c => c.Customer).ToListAsync();
         }
-        public async Task<Card> GetByIdAsync(long id)
+        public async Task<Card?> GetByIdAsync(long id)
         {
-
-            return await _context.Cards.FindAsync(id);
+            return await _context.Cards.Include(c => c.Customer).FirstOrDefaultAsync(c => c.Id == id);
         }
+
         public async Task AddAsync(Card card)
         {
-            _context.Cards.Add(card);
+            _context.Cards.Add(new Card()
+            {
+
+                CardNumber =card.CardNumber,
+                AccountNumber=card.AccountNumber,
+                NationalNumber=card.NationalNumber,
+                CustomerId = card.CustomerId,
+                ProductId = card.ProductId,
+                IsActive = card.IsActive
+            }
+                
+                
+                );
             await _context.SaveChangesAsync();
         }
 
@@ -41,18 +54,14 @@ namespace SuperheroAPI.Repositories
         }
         public async Task<List<Card>> SearchAsync(string? cardNumber, string? accountNumber, string? nationalNumber)
         {
-            var query = _context.Cards.AsQueryable();
-
-            if (!string.IsNullOrEmpty(cardNumber))
-                query = query.Where(c => c.CardNumber == cardNumber);
-
-            if (!string.IsNullOrEmpty(accountNumber))
-                query = query.Where(c => c.AccountNumber == accountNumber);
-
-            if (!string.IsNullOrEmpty(nationalNumber))
-                query = query.Where(c => c.NationalNumber == nationalNumber);
-
-            return await query.ToListAsync();
+            return await _context.Cards
+                .Include(c => c.Customer)
+                .Where(c =>
+                    (cardNumber == null || c.CardNumber.Contains(cardNumber)) &&
+                    (accountNumber == null || c.AccountNumber.Contains(accountNumber)) &&
+                    (nationalNumber == null || c.NationalNumber.Contains(nationalNumber)))
+                .ToListAsync();
         }
     }
-}
+    }
+
